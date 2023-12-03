@@ -427,8 +427,8 @@ class PekkoHttpGenerator private (pekkoHttpVersion: PekkoHttpVersion, modelGener
           (
             413,
             pekkoHttpVersion match {
-              case PekkoHttpVersion.V10_1 => q"RequestEntityTooLarge"
-              case PekkoHttpVersion.V10_2 => q"PayloadTooLarge"
+              case PekkoHttpVersion.V1_0_0 => q"PayloadTooLarge"
+              case PekkoHttpVersion.V1_1_0 => q"ContentTooLarge"
             }
           )
         )

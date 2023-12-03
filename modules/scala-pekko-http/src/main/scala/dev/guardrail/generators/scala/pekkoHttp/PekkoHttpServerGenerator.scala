@@ -804,19 +804,12 @@ class PekkoHttpServerGenerator private (pekkoHttpVersion: PekkoHttpVersion, mode
               part.entity.dataBytes.toMat(fileSink)(Keep.right).run()
                 .transform(${Term.PartialFunction(
                     List(
-                      if (pekkoHttpVersion == PekkoHttpVersion.V10_1)
-                        Some(p"""
-                    case IOResult(_, Failure(t)) =>
-                      dest.delete()
-                      throw t
-                  """)
-                      else None,
-                      Some(p"""
+                      p"""
                   case IOResult(_, _) =>
                     val hash = messageDigest.map(md => javax.xml.bind.DatatypeConverter.printHexBinary(md.digest()).toLowerCase(java.util.Locale.US))
                     (dest, part.filename, part.entity.contentType, hash)
-                  """)
-                    ).flatten
+                  """
+                    )
                   )}, { case t =>
                   dest.delete()
                   t
@@ -842,8 +835,8 @@ class PekkoHttpServerGenerator private (pekkoHttpVersion: PekkoHttpVersion, mode
                   }
                   val info = new ErrorInfo(summary, "Consider increasing the value of pekko.http.server.parsing.max-content-length")
                   val status = ${pekkoHttpVersion match {
-                    case PekkoHttpVersion.V10_1 => q"StatusCodes.RequestEntityTooLarge"
-                    case PekkoHttpVersion.V10_2 => q"StatusCodes.PayloadTooLarge"
+                    case PekkoHttpVersion.V1_0_0 => q"StatusCodes.PayloadTooLarge"
+                    case PekkoHttpVersion.V1_1_0 => q"StatusCodes.ContentTooLarge"
                   }}
                   val msg = if (settings.verboseErrorMessages) info.formatPretty else info.summary
                   complete(HttpResponse(status, entity = msg))
