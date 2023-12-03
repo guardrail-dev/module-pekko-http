@@ -1,0 +1,11 @@
+.DS_Store
+target/
+.bloop/
+.bsp/
+.metals/
+vendor/
+
+.idea
+.bundle/
+metals.sbt
+.sbtopts
