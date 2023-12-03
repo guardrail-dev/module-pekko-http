@@ -1,0 +1,18 @@
+name: Release Drafter
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch: {}
+
+jobs:
+  scala-pekko-http:
+    name: '[scala-pekko-http] Draft release'
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: blast-hardcheese/release-drafter@v5.18.105
+        with:
+          config-name: release-drafter-scala-pekko-http.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
