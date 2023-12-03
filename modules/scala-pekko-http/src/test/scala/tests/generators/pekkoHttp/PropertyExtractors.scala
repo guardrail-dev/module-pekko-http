@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp
+package tests.generators.pekkoHttp
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -72,7 +72,7 @@ class PropertyExtractors extends AnyFunSuite with Matchers with SwaggerSpecRunne
       ProtocolDefinitions(ClassDefinition(_, _, _, cls, staticDefns, _) :: _, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val definition = q"""

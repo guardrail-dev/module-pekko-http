@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client
+package tests.generators.pekkoHttp.client
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -8,7 +8,7 @@ import scala.meta._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-class AkkaHttpClientTracingTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
+class PekkoHttpClientTracingTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
 
   test("Manage child tracing span") {
     val spec = s"""
@@ -35,7 +35,7 @@ class AkkaHttpClientTracingTest extends AnyFunSuite with Matchers with SwaggerSp
       |""".stripMargin
 
     val (_, Clients(Client(_, _, _, _, cls, _) :: _, Nil), _) =
-      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "akka-http")
+      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "pekko-http")
 
     val client = q"""
       class BarBazClient(host: String = "http://localhost:1234", clientName: String = "foo-bar-baz")(implicit httpClient: HttpRequest => Future[HttpResponse], ec: ExecutionContext, mat: Materializer) {
@@ -91,7 +91,7 @@ class AkkaHttpClientTracingTest extends AnyFunSuite with Matchers with SwaggerSp
       _,
       Clients(Client(tags, className, _, _, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "pekko-http")
 
     val client = q"""
       class BarBazClient(host: String = "http://localhost:1234", clientName: String = "foo-bar-baz")(implicit httpClient: HttpRequest => Future[HttpResponse], ec: ExecutionContext, mat: Materializer) {

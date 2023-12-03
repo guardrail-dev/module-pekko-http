@@ -1,4 +1,4 @@
-package dev.guardrail.generators.scala.akkaHttp
+package dev.guardrail.generators.scala.pekkoHttp
 
 import _root_.io.swagger.v3.oas.models.Components
 import _root_.io.swagger.v3.oas.models.PathItem.HttpMethod
@@ -35,27 +35,27 @@ import java.net.URI
 import scala.meta._
 import scala.reflect.runtime.universe.typeTag
 
-class AkkaHttpClientGeneratorLoader extends ClientGeneratorLoader {
+class PekkoHttpClientGeneratorLoader extends ClientGeneratorLoader {
   type L = ScalaLanguage
   def reified = typeTag[Target[ScalaLanguage]]
   val apply = ModuleLoadResult.forProduct2(
-    ClientGeneratorLoader.label -> Seq(AkkaHttpVersion.mapping),
+    ClientGeneratorLoader.label -> Seq(PekkoHttpVersion.mapping),
     ProtocolGeneratorLoader.label -> Seq(
       CirceModelGenerator.mapping,
       CirceRefinedModelGenerator.mapping.view.mapValues(_.toCirce).toMap,
       JacksonModelGenerator.mapping
     )
   ) { (_, collectionVersion) =>
-    AkkaHttpClientGenerator(collectionVersion)
+    PekkoHttpClientGenerator(collectionVersion)
   }
 }
 
-object AkkaHttpClientGenerator {
+object PekkoHttpClientGenerator {
   def apply(modelGeneratorType: ModelGeneratorType): ClientTerms[ScalaLanguage, Target] =
-    new AkkaHttpClientGenerator(modelGeneratorType)
+    new PekkoHttpClientGenerator(modelGeneratorType)
 }
 
-class AkkaHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) extends ClientTerms[ScalaLanguage, Target] {
+class PekkoHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) extends ClientTerms[ScalaLanguage, Target] {
   private def splitOperationParts(operationId: String): (List[String], String) = {
     val parts = operationId.split('.')
     (parts.drop(1).toList, parts.last)
@@ -500,7 +500,7 @@ class AkkaHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) e
       param"mat: Materializer"
     )
     for {
-      protocolImplicits <- AkkaHttpHelper.protocolImplicits(modelGeneratorType)
+      protocolImplicits <- PekkoHttpHelper.protocolImplicits(modelGeneratorType)
     } yield List(
       Term.ParamClause(
         List(formatHost(serverUrls)) ++ (if (tracing)
@@ -547,7 +547,7 @@ class AkkaHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) e
       }
 
       for {
-        protocolImplicits <- AkkaHttpHelper.protocolImplicits(modelGeneratorType)
+        protocolImplicits <- PekkoHttpHelper.protocolImplicits(modelGeneratorType)
         args = List(
           Term.ParamClause(
             List(param"httpClient: HttpRequest => Future[HttpResponse]", formatHost(serverUrls)) ++ tracingParams,
@@ -635,7 +635,7 @@ class AkkaHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) e
     responses.value.flatTraverse { resp =>
       resp.value.map(_._2).toList.traverse { tpe =>
         for {
-          (decoder, baseType) <- AkkaHttpHelper.generateDecoder(tpe, produces, modelGeneratorType)
+          (decoder, baseType) <- PekkoHttpHelper.generateDecoder(tpe, produces, modelGeneratorType)
         } yield q"val ${Pat.Var(Term.Name(s"$methodName${resp.statusCodeName}Decoder"))} = ${decoder}"
       }
     }

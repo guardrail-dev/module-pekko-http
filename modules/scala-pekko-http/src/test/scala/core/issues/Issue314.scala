@@ -118,7 +118,7 @@ class Issue314 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
 
     def resource(prefix: String) =
       s"""object ${prefix}Resource {
-         |  def routes(handler: ${prefix}Handler)(implicit mat: akka.stream.Materializer): Route = {
+         |  def routes(handler: ${prefix}Handler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
          |    {
          |      path("user" / Segment).apply(id => get(discardEntity(complete(handler.getUser(GetUserResponse)(id)))))
          |    }
@@ -150,7 +150,7 @@ class Issue314 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
         _,
         Clients(Client(_, _, _, staticDefns, cls, _) :: _, Nil),
         _
-      ) = runSwaggerSpec(scalaInterpreter)(swagger(config))(Context.empty.copy(tagsBehaviour = Context.PackageFromTags), "akka-http")
+      ) = runSwaggerSpec(scalaInterpreter)(swagger(config))(Context.empty.copy(tagsBehaviour = Context.PackageFromTags), "pekko-http")
       val cmp = companionForStaticDefns(staticDefns)
 
       verifyTree(cls.head.value, client(expectedClassPrefix))
@@ -162,7 +162,7 @@ class Issue314 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
         _,
         _,
         Servers(Server(_, _, genHandler, genResource :: Nil) :: Nil, Nil)
-      ) = runSwaggerSpec(scalaInterpreter)(swagger(config))(Context.empty.copy(tagsBehaviour = Context.PackageFromTags), "akka-http")
+      ) = runSwaggerSpec(scalaInterpreter)(swagger(config))(Context.empty.copy(tagsBehaviour = Context.PackageFromTags), "pekko-http")
 
       verifyTree(genHandler, handler(expectedClassPrefix))
       verifyTree(genResource, resource(expectedClassPrefix))

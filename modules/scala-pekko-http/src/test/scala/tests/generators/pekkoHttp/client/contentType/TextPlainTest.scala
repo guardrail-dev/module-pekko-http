@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client.contentType
+package tests.generators.pekkoHttp.client.contentType
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.generators.scala.syntax.companionForStaticDefns
@@ -40,7 +40,7 @@ class TextPlainTest extends AnyFunSuite with Matchers with SwaggerSpecRunner wit
       _,
       Clients(Client(tags, className, _, staticDefns, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val companion = q"""

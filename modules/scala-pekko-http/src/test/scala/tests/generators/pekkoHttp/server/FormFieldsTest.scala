@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.server
+package tests.generators.pekkoHttp.server
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -49,7 +49,7 @@ class FormFieldsServerTest extends AnyFunSuite with Matchers with SwaggerSpecRun
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler = q"""
       trait Handler {
@@ -78,7 +78,7 @@ class FormFieldsServerTest extends AnyFunSuite with Matchers with SwaggerSpecRun
     """
     val resource = q"""
       object Resource {
-        def routes(handler: Handler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: Handler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             path("foo")(put(({
               object putFooParts {
@@ -154,7 +154,7 @@ class FormFieldsServerTest extends AnyFunSuite with Matchers with SwaggerSpecRun
                         case None =>
                           s"Aggregated data length of request entity exceeds the configured limit of $$limit bytes"
                       }
-                      val info = new ErrorInfo(summary, "Consider increasing the value of akka.http.server.parsing.max-content-length")
+                      val info = new ErrorInfo(summary, "Consider increasing the value of pekko.http.server.parsing.max-content-length")
                       val status = StatusCodes.PayloadTooLarge
                       val msg = if (settings.verboseErrorMessages) info.formatPretty else info.summary
                       complete(HttpResponse(status, entity = msg))

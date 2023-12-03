@@ -37,7 +37,7 @@ class Issue127 extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler = q"""
       trait Handler {
@@ -67,7 +67,7 @@ class Issue127 extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
 
     val resource = q"""
       object Resource {
-        def routes(handler: Handler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: Handler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             path("file")(post(({
               object uploadFileParts {
@@ -119,7 +119,7 @@ class Issue127 extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
                         case None =>
                           s"Aggregated data length of request entity exceeds the configured limit of $$limit bytes"
                       }
-                      val info = new ErrorInfo(summary, "Consider increasing the value of akka.http.server.parsing.max-content-length")
+                      val info = new ErrorInfo(summary, "Consider increasing the value of pekko.http.server.parsing.max-content-length")
                       val status = StatusCodes.PayloadTooLarge
                       val msg = if (settings.verboseErrorMessages) info.formatPretty else info.summary
                       complete(HttpResponse(status, entity = msg))

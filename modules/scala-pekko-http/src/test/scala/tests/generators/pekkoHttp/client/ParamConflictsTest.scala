@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client
+package tests.generators.pekkoHttp.client
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -54,7 +54,7 @@ class ParamConflictsTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
       _,
       Clients(Client(tags, className, _, _, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val client = q"""
       class Client(host: String = "http://localhost:1234")(implicit httpClient: HttpRequest => Future[HttpResponse], ec: ExecutionContext, mat: Materializer) {
@@ -90,7 +90,7 @@ class ParamConflictsTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
       ProtocolDefinitions(ClassDefinition(_, _, _, cls, staticDefns, _) :: _, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val definition = q"""

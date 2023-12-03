@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client
+package tests.generators.pekkoHttp.client
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.generators.scala.syntax._
@@ -38,7 +38,7 @@ class SchemeTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with S
 
   test("Use first scheme") {
     val (_, Clients(Client(_, clientName, _, staticDefns, cls, _) :: _, Nil), _) =
-      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val companion = q"""

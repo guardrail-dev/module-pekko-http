@@ -1,4 +1,4 @@
-package dev.guardrail.generators.scala.akkaHttp
+package dev.guardrail.generators.scala.pekkoHttp
 
 import scala.meta._
 import scala.reflect.runtime.universe.typeTag
@@ -8,28 +8,28 @@ import dev.guardrail.generators.scala.{ CirceModelGenerator, CirceRefinedModelGe
 import dev.guardrail.generators.spi.{ FrameworkGeneratorLoader, ModuleLoadResult, ProtocolGeneratorLoader }
 import dev.guardrail.terms.framework._
 
-class AkkaHttpGeneratorLoader extends FrameworkGeneratorLoader {
+class PekkoHttpGeneratorLoader extends FrameworkGeneratorLoader {
   type L = ScalaLanguage
   def reified = typeTag[Target[ScalaLanguage]]
   val apply =
     ModuleLoadResult.forProduct2(
-      FrameworkGeneratorLoader.label -> Seq(AkkaHttpVersion.mapping),
+      FrameworkGeneratorLoader.label -> Seq(PekkoHttpVersion.mapping),
       ProtocolGeneratorLoader.label -> Seq(
         CirceModelGenerator.mapping,
         CirceRefinedModelGenerator.mapping.view.mapValues(_.toCirce).toMap,
         JacksonModelGenerator.mapping
       )
-    ) { (akkaHttpVersion, collectionVersion) =>
-      AkkaHttpGenerator(akkaHttpVersion, collectionVersion)
+    ) { (pekkoHttpVersion, collectionVersion) =>
+      PekkoHttpGenerator(pekkoHttpVersion, collectionVersion)
     }
 }
 
-object AkkaHttpGenerator {
-  def apply(akkaHttpVersion: AkkaHttpVersion, modelGeneratorType: ModelGeneratorType): FrameworkTerms[ScalaLanguage, Target] =
-    new AkkaHttpGenerator(akkaHttpVersion, modelGeneratorType)
+object PekkoHttpGenerator {
+  def apply(pekkoHttpVersion: PekkoHttpVersion, modelGeneratorType: ModelGeneratorType): FrameworkTerms[ScalaLanguage, Target] =
+    new PekkoHttpGenerator(pekkoHttpVersion, modelGeneratorType)
 }
 
-class AkkaHttpGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGeneratorType: ModelGeneratorType) extends FrameworkTerms[ScalaLanguage, Target] {
+class PekkoHttpGenerator private (pekkoHttpVersion: PekkoHttpVersion, modelGeneratorType: ModelGeneratorType) extends FrameworkTerms[ScalaLanguage, Target] {
   override def fileType(format: Option[String]) = Target.pure(format.fold[Type](t"BodyPartEntity")(Type.Name(_)))
   override def objectType(format: Option[String]) =
     modelGeneratorType match {
@@ -46,16 +46,16 @@ class AkkaHttpGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGenerato
         case _                        => Target.raiseError(RuntimeFailure(s"Unknown modelGeneratorType: ${modelGeneratorType}"))
       }
     } yield List(
-      q"import akka.http.scaladsl.model._",
-      q"import akka.http.scaladsl.model.headers.RawHeader",
-      q"import akka.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller, FromEntityUnmarshaller, FromRequestUnmarshaller, FromStringUnmarshaller}",
-      q"import akka.http.scaladsl.marshalling.{Marshal, Marshaller, Marshalling, ToEntityMarshaller, ToResponseMarshaller}",
-      q"import akka.http.scaladsl.server.Directives._",
-      q"import akka.http.scaladsl.server.{Directive, Directive0, Directive1, ExceptionHandler, MalformedFormFieldRejection, MalformedHeaderRejection, MissingFormFieldRejection, MalformedRequestContentRejection, Rejection, RejectionError, Route}",
-      q"import akka.http.scaladsl.util.FastFuture",
-      q"import akka.stream.{IOResult, Materializer}",
-      q"import akka.stream.scaladsl.{FileIO, Keep, Sink, Source}",
-      q"import akka.util.ByteString",
+      q"import org.apache.pekko.http.scaladsl.model._",
+      q"import org.apache.pekko.http.scaladsl.model.headers.RawHeader",
+      q"import org.apache.pekko.http.scaladsl.unmarshalling.{Unmarshal, Unmarshaller, FromEntityUnmarshaller, FromRequestUnmarshaller, FromStringUnmarshaller}",
+      q"import org.apache.pekko.http.scaladsl.marshalling.{Marshal, Marshaller, Marshalling, ToEntityMarshaller, ToResponseMarshaller}",
+      q"import org.apache.pekko.http.scaladsl.server.Directives._",
+      q"import org.apache.pekko.http.scaladsl.server.{Directive, Directive0, Directive1, ExceptionHandler, MalformedFormFieldRejection, MalformedHeaderRejection, MissingFormFieldRejection, MalformedRequestContentRejection, Rejection, RejectionError, Route}",
+      q"import org.apache.pekko.http.scaladsl.util.FastFuture",
+      q"import org.apache.pekko.stream.{IOResult, Materializer}",
+      q"import org.apache.pekko.stream.scaladsl.{FileIO, Keep, Sink, Source}",
+      q"import org.apache.pekko.util.ByteString",
       q"import cats.{Functor, Id}",
       q"import cats.data.EitherT",
       q"import cats.implicits._",
@@ -76,7 +76,7 @@ class AkkaHttpGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGenerato
         case _                          => Target.raiseError(RuntimeFailure(s"Unknown modelGeneratorType: ${modelGeneratorType}"))
       }
       defn = q"""
-        object AkkaHttpImplicits {
+        object PekkoHttpImplicits {
           private[this] def pathEscape(s: String): String = Uri.Path.Segment.apply(s, Uri.Path.Empty).toString
           implicit def addShowablePath[T](implicit ev: Show[T]): AddPath[T] = AddPath.build[T](v => pathEscape(ev.show(v)))
 
@@ -149,7 +149,7 @@ class AkkaHttpGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGenerato
           ..$protocolImplicits
         }
       """
-    } yield Some((q"AkkaHttpImplicits", defn))
+    } yield Some((q"PekkoHttpImplicits", defn))
 
   private def circeImplicits(circeVersion: CirceModelGenerator): List[Defn] = {
     val jsonEncoderTypeclass: Type = t"io.circe.Encoder"
@@ -426,9 +426,9 @@ class AkkaHttpGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGenerato
         Target.pure(
           (
             413,
-            akkaHttpVersion match {
-              case AkkaHttpVersion.V10_1 => q"RequestEntityTooLarge"
-              case AkkaHttpVersion.V10_2 => q"PayloadTooLarge"
+            pekkoHttpVersion match {
+              case PekkoHttpVersion.V10_1 => q"RequestEntityTooLarge"
+              case PekkoHttpVersion.V10_2 => q"PayloadTooLarge"
             }
           )
         )

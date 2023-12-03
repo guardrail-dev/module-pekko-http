@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp
+package tests.generators.pekkoHttp
 
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
@@ -64,7 +64,7 @@ class EnumTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
       ProtocolDefinitions(EnumDefinition(_, _, _, _, cls, staticDefns) :: Nil, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val definition = q"""
@@ -100,7 +100,7 @@ class EnumTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
       _,
       Clients(Client(tags, className, _, staticDefns, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val cmp = companionForStaticDefns(staticDefns)
 
     val client = q"""

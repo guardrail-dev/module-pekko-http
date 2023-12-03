@@ -1,4 +1,4 @@
-package dev.guardrail.generators.scala.akkaHttp
+package dev.guardrail.generators.scala.pekkoHttp
 
 import scala.meta._
 
@@ -6,7 +6,7 @@ import dev.guardrail.core.PathExtractor
 import dev.guardrail.generators.scala.{ ModelGeneratorType, ScalaLanguage }
 import dev.guardrail.generators.LanguageParameter
 
-object AkkaHttpPathExtractor
+object PekkoHttpPathExtractor
     extends PathExtractor[ScalaLanguage, Term, Term.Name, ModelGeneratorType](
       pathSegmentConverter = { case (LanguageParameter(_, param, _, argName, argType), base, modelGeneratorType) =>
         base.fold {
@@ -19,7 +19,7 @@ object AkkaHttpPathExtractor
             case t"Long"   => Right(q"LongNumber")
             case t"BigInt" => Right(q"Segment.map(BigInt.apply _)")
             case tpe =>
-              AkkaHttpHelper
+              PekkoHttpHelper
                 .fromStringConverter(tpe, modelGeneratorType)
                 .map(tpe => q"Segment.flatMap(str => ${tpe})")
           }
@@ -30,7 +30,7 @@ object AkkaHttpPathExtractor
               Right(q"${segment}.map(BigDecimal.apply _)")
             case t"BigInt" => Right(q"${segment}.map(BigInt.apply _)")
             case tpe =>
-              AkkaHttpHelper
+              PekkoHttpHelper
                 .fromStringConverter(tpe, modelGeneratorType)
                 .map(tpe => q"${segment}.flatMap(str => ${tpe})")
           }

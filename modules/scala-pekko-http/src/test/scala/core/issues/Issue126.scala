@@ -28,7 +28,7 @@ class Issue126 extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler = q"""
       trait StoreHandler {
@@ -37,7 +37,7 @@ class Issue126 extends AnyFunSuite with Matchers with SwaggerSpecRunner with Sca
     """
     val resource = q"""
       object StoreResource {
-        def routes(handler: StoreHandler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: StoreHandler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             pathEndOrSingleSlash(options(discardEntity(complete(handler.getRoot(GetRootResponse)()))))
           }

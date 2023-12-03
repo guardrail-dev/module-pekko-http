@@ -1,4 +1,4 @@
-package dev.guardrail.generators.scala.akkaHttp
+package dev.guardrail.generators.scala.pekkoHttp
 
 import cats.data.NonEmptyList
 import cats.syntax.all._
@@ -8,7 +8,7 @@ import dev.guardrail.generators.scala.{ CirceModelGenerator, JacksonModelGenerat
 import dev.guardrail.terms.{ ApplicationJson, ContentType, TextPlain }
 import scala.meta._
 
-object AkkaHttpHelper {
+object PekkoHttpHelper {
   def generateDecoder(tpe: Type, consumes: Tracker[NonEmptyList[ContentType]], modelGeneratorType: ModelGeneratorType): Target[(Term, Type)] = {
     val baseType = tpe match {
       case t"Option[$x]" => x

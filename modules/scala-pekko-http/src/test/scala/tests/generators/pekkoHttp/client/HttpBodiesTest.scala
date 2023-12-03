@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client
+package tests.generators.pekkoHttp.client
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -89,7 +89,7 @@ class HttpBodiesTest extends AnyFunSuite with Matchers with SwaggerSpecRunner wi
       _,
       Clients(Client(tags, className, _, _, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val client = q"""
       class Client(host: String = "http://localhost:1234")(implicit httpClient: HttpRequest => Future[HttpResponse], ec: ExecutionContext, mat: Materializer) {

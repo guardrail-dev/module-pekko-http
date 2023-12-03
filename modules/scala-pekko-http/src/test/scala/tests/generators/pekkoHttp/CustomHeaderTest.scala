@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp
+package tests.generators.pekkoHttp
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -42,14 +42,14 @@ class CustomHeaderTest extends AnyFunSuite with Matchers with SwaggerSpecRunner 
 
   test("Should produce static parameter constraints") {
     val (_, Clients(client :: Nil, Nil), Servers(Server(_, _, genHandler, genResource :: Nil) :: Nil, Nil)) =
-      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler =
       q"""trait Handler { def getFoo(respond: Resource.GetFooResponse.type)(customHeader: Bar): scala.concurrent.Future[Resource.GetFooResponse] }"""
 
     val resource = q"""
       object Resource {
-        def routes(handler: Handler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: Handler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             path("foo")(get(headerValueByName("CustomHeader").flatMap(str => onComplete(Unmarshal(str).to[Bar](stringyJsonUnmarshaller.andThen(unmarshallJson[Bar]), mat.executionContext, mat)).flatMap[Tuple1[Bar]]({
               case Failure(e) =>

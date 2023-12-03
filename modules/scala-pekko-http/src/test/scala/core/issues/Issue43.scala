@@ -99,7 +99,7 @@ class Issue43 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val companion    = companionForStaticDefns(staticDefns)
     val companionCat = companionForStaticDefns(staticDefnsCat)
 
@@ -278,7 +278,7 @@ class Issue43 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val companionPersianCat = companionForStaticDefns(staticDefnsPersianCat)
     val companionDog        = companionForStaticDefns(staticDefnsDog)
     val companionPet        = companionForStaticDefns(staticDefnsPet)
@@ -415,7 +415,7 @@ class Issue43 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ProtocolDefinitions(ClassDefinition(cls, _, _, defCls, _, _) :: ADT(_, _, _, _, _) :: Nil, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     it("Direct extension should be supported") {
       cls shouldBe "Cat"
@@ -475,7 +475,7 @@ class Issue43 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val companionPersianCat = companionForStaticDefns(staticDefnsPersianCat)
     val companionCat        = companionForStaticDefns(staticDefnsCat)
 
@@ -574,7 +574,7 @@ class Issue43 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
     val companionCat    = companionForStaticDefns(staticDefnsCat)
     val companionPet    = companionForStaticDefns(staticDefnsPet)
     val companionMammal = companionForStaticDefns(staticDefnsMammal)

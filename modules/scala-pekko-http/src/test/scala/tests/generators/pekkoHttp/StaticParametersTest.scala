@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp
+package tests.generators.pekkoHttp
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -34,7 +34,7 @@ class StaticParametersTest extends AnyFunSuite with Matchers with SwaggerSpecRun
 
   test("Should produce static parameter constraints") {
     val (_, _, Servers(Server(_, _, genHandler, genResource :: Nil) :: Nil, Nil)) =
-      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+      runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler = q"""
       trait Handler {
@@ -45,7 +45,7 @@ class StaticParametersTest extends AnyFunSuite with Matchers with SwaggerSpecRun
 
     val resource = q"""
       object Resource {
-        def routes(handler: Handler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: Handler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             (pathPrefix("foo") & pathEndOrSingleSlash & parameter("bar").require(_ == "2"))(get(discardEntity(complete(handler.getFoo2(GetFoo2Response)()))))
           } ~ {

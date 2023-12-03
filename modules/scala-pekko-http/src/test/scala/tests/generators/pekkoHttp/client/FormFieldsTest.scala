@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp.client
+package tests.generators.pekkoHttp.client
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -8,7 +8,7 @@ import scala.meta._
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-class MultipartTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
+class FormFieldsTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
   val spec: String = s"""
     |swagger: "2.0"
     |info:
@@ -19,40 +19,35 @@ class MultipartTest extends AnyFunSuite with Matchers with SwaggerSpecRunner wit
     |  - http
     |paths:
     |  /foo:
-    |    post:
-    |      operationId: createFoo
+    |    put:
+    |      operationId: putFoo
     |      consumes:
     |        - multipart/form-data
-    |      produces:
-    |        - application/json
     |      parameters:
+    |        - name: foo
+    |          in: formData
+    |          type: string
+    |          required: true
     |        - name: bar
     |          in: formData
-    |          type: string
+    |          type: integer
+    |          format: int64
     |          required: true
-    |        - name: Quux
+    |        - name: baz
     |          in: formData
     |          type: file
     |          required: true
-    |        - name: Baz
-    |          in: formData
-    |          type: string
-    |        - name: oort_cloud
-    |          in: formData
-    |          type: file
     |      responses:
     |        200:
     |          description: Success
-    |          schema:
-    |            type: string
     |""".stripMargin
 
-  test("Multipart form data") {
+  test("Properly handle all methods") {
     val (
       _,
-      Clients(Client(_, className, _, _, cls, _) :: _, Nil),
+      Clients(Client(tags, className, _, _, cls, _) :: _, Nil),
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val client = q"""
       class Client(host: String = "http://localhost:1234")(implicit httpClient: HttpRequest => Future[HttpResponse], ec: ExecutionContext, mat: Materializer) {
@@ -65,16 +60,13 @@ class MultipartTest extends AnyFunSuite with Matchers with SwaggerSpecRunner wit
               Left(Left(t))
           }))
         }
-        val createFooOKDecoder = {
-          structuredJsonEntityUnmarshaller.flatMap(_ => _ => json => io.circe.Decoder[String].decodeJson(json).fold(FastFuture.failed, FastFuture.successful))
-        }
-        def createFoo(bar: String, quux: BodyPartEntity, baz: Option[String] = None, oortCloud: Option[BodyPartEntity] = None, headers: List[HttpHeader] = Nil): EitherT[Future, Either[Throwable, HttpResponse], CreateFooResponse] = {
+        def putFoo(foo: String, bar: Long, baz: BodyPartEntity, headers: List[HttpHeader] = Nil): EitherT[Future, Either[Throwable, HttpResponse], PutFooResponse] = {
           val allHeaders = headers ++ scala.collection.immutable.Seq[Option[HttpHeader]]().flatten
-          makeRequest(HttpMethods.POST, host + basePath + "/foo", allHeaders, Multipart.FormData(Source.fromIterator {
-            () => List(Some(Multipart.FormData.BodyPart("bar", Formatter.show(bar))), Some(Multipart.FormData.BodyPart("Quux", quux)), baz.map(v => Multipart.FormData.BodyPart("Baz", Formatter.show(v))), oortCloud.map(v => Multipart.FormData.BodyPart("oort_cloud", v))).flatten.iterator
+          makeRequest(HttpMethods.PUT, host + basePath + "/foo", allHeaders, Multipart.FormData(Source.fromIterator {
+            () => List(Some(Multipart.FormData.BodyPart("foo", Formatter.show(foo))), Some(Multipart.FormData.BodyPart("bar", Formatter.show(bar))), Some(Multipart.FormData.BodyPart("baz", baz))).flatten.iterator
           }), HttpProtocols.`HTTP/1.1`).flatMap(req => EitherT(httpClient(req).flatMap(resp => resp.status match {
             case StatusCodes.OK =>
-              Unmarshal(resp.entity).to[String](createFooOKDecoder, implicitly, implicitly).map(x => Right(CreateFooResponse.OK(x)))
+              resp.discardEntityBytes().future.map(_ => Right(PutFooResponse.OK))
             case _ =>
               FastFuture.successful(Left(Right(resp)))
           }).recover({

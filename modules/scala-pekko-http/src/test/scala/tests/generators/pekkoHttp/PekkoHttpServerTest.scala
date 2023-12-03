@@ -1,4 +1,4 @@
-package tests.generators.akkaHttp
+package tests.generators.pekkoHttp
 
 import dev.guardrail.generators.scala.ScalaGeneratorMappings.scalaInterpreter
 import dev.guardrail.Context
@@ -7,7 +7,7 @@ import support.{ ScalaMetaMatchers, SwaggerSpecRunner }
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers
 
-class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
+class PekkoHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunner with ScalaMetaMatchers {
   import scala.meta._
 
   val spec: String = s"""
@@ -130,7 +130,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     val handler = q"""
       trait StoreHandler {
@@ -143,7 +143,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
     """
     val resource = q"""
       object StoreResource {
-        def routes(handler: StoreHandler)(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: StoreHandler)(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             pathEndOrSingleSlash(get(discardEntity(complete(handler.getRoot(GetRootResponse)()))))
           } ~ {
@@ -267,7 +267,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(tracing = true), "pekko-http")
 
     val handler = q"""
       trait StoreHandler {
@@ -280,7 +280,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
     """
     val resource = q"""
       object StoreResource {
-        def routes(handler: StoreHandler, trace: String => Directive1[TraceBuilder])(implicit mat: akka.stream.Materializer): Route = {
+        def routes(handler: StoreHandler, trace: String => Directive1[TraceBuilder])(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             pathEndOrSingleSlash(get(trace("store:getRoot").apply(traceBuilder => discardEntity(complete(handler.getRoot(GetRootResponse)()(traceBuilder))))))
           } ~ {
@@ -404,7 +404,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
       _,
       _,
       Servers(Server(pkg, extraImports, genHandler, genResource :: Nil) :: Nil, Nil)
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(customExtraction = true), "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty.copy(customExtraction = true), "pekko-http")
 
     val handler = q"""
       trait StoreHandler[-E] {
@@ -417,7 +417,7 @@ class AkkaHttpServerTest extends AnyFunSuite with Matchers with SwaggerSpecRunne
     """
     val resource = q"""
       object StoreResource {
-        def routes[E](handler: StoreHandler[E], customExtract: String => Directive1[E])(implicit mat: akka.stream.Materializer): Route = {
+        def routes[E](handler: StoreHandler[E], customExtract: String => Directive1[E])(implicit mat: org.apache.pekko.stream.Materializer): Route = {
           {
             pathEndOrSingleSlash(get(customExtract("getRoot").apply(extracted => discardEntity(complete(handler.getRoot(GetRootResponse)()(extracted))))))
           } ~ ({

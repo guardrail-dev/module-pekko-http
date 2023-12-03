@@ -1,4 +1,4 @@
-package dev.guardrail.generators.scala.akkaHttp
+package dev.guardrail.generators.scala.pekkoHttp
 
 import _root_.io.swagger.v3.oas.models.Components
 import _root_.io.swagger.v3.oas.models.Operation
@@ -54,25 +54,25 @@ import dev.guardrail.terms.server._
 import scala.meta._
 import scala.reflect.runtime.universe.typeTag
 
-class AkkaHttpServerGeneratorLoader extends ServerGeneratorLoader {
+class PekkoHttpServerGeneratorLoader extends ServerGeneratorLoader {
   type L = ScalaLanguage
   override def reified = typeTag[Target[ScalaLanguage]]
   val apply =
     ModuleLoadResult.forProduct2(
-      ServerGeneratorLoader.label -> Seq(AkkaHttpVersion.mapping),
+      ServerGeneratorLoader.label -> Seq(PekkoHttpVersion.mapping),
       ProtocolGeneratorLoader.label -> Seq(
         CirceModelGenerator.mapping,
         CirceRefinedModelGenerator.mapping.view.mapValues(_.toCirce).toMap,
         JacksonModelGenerator.mapping
       )
-    ) { (akkaHttpVersion, collectionVersion) =>
-      AkkaHttpServerGenerator(akkaHttpVersion, collectionVersion)
+    ) { (pekkoHttpVersion, collectionVersion) =>
+      PekkoHttpServerGenerator(pekkoHttpVersion, collectionVersion)
     }
 }
 
-object AkkaHttpServerGenerator {
-  def apply(akkaHttpVersion: AkkaHttpVersion, modelGeneratorType: ModelGeneratorType): ServerTerms[ScalaLanguage, Target] =
-    new AkkaHttpServerGenerator(akkaHttpVersion, modelGeneratorType)
+object PekkoHttpServerGenerator {
+  def apply(pekkoHttpVersion: PekkoHttpVersion, modelGeneratorType: ModelGeneratorType): ServerTerms[ScalaLanguage, Target] =
+    new PekkoHttpServerGenerator(pekkoHttpVersion, modelGeneratorType)
 
   def generateUrlPathExtractors(
       path: Tracker[String],
@@ -80,7 +80,7 @@ object AkkaHttpServerGenerator {
       modelGeneratorType: ModelGeneratorType
   ): Target[NonEmptyList[(Term, List[Term.Name])]] =
     for {
-      (parts, (trailingSlash, queryParams)) <- AkkaHttpPathExtractor.runParse(path, pathArgs, modelGeneratorType)
+      (parts, (trailingSlash, queryParams)) <- PekkoHttpPathExtractor.runParse(path, pathArgs, modelGeneratorType)
       allPairs <- parts
         .foldLeft[Target[NonEmptyList[(Term, List[Term.Name])]]](Target.pure(NonEmptyList.one((q"pathEnd", List.empty)))) { case (acc, (termName, b)) =>
           acc.flatMap {
@@ -112,7 +112,7 @@ object AkkaHttpServerGenerator {
     } yield result.reverse
 }
 
-class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGeneratorType: ModelGeneratorType) extends ServerTerms[ScalaLanguage, Target] {
+class PekkoHttpServerGenerator private (pekkoHttpVersion: PekkoHttpVersion, modelGeneratorType: ModelGeneratorType) extends ServerTerms[ScalaLanguage, Target] {
   val customExtractionTypeName: Type.Name = Type.Name("E")
 
   override def fromSpec(context: Context, supportPackage: NonEmptyList[String], basePath: Option[String], frameworkImports: List[ScalaLanguage#Import])(
@@ -285,7 +285,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
         .map { case (tpe, name) =>
           q"implicit def ${Term.Name(s"${name.value}Ev")}(value: ${tpe}): ${responseSuperType} = ${name}(value)"
         }
-      protocolImplicits <- AkkaHttpHelper.protocolImplicits(modelGeneratorType)
+      protocolImplicits <- PekkoHttpHelper.protocolImplicits(modelGeneratorType)
       toResponseImplicits = List(param"ec: scala.concurrent.ExecutionContext") ++ protocolImplicits
       companion = q"""
           object ${responseSuperTerm} {
@@ -437,7 +437,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
   ): Target[List[Defn]] =
     for {
       _                 <- Target.log.debug(s"renderClass(${resourceName}, ${handlerName}, <combinedRouteTerms>, ${extraRouteParams})")
-      protocolImplicits <- AkkaHttpHelper.protocolImplicits(modelGeneratorType)
+      protocolImplicits <- PekkoHttpHelper.protocolImplicits(modelGeneratorType)
     } yield {
       val handlerType = {
         val baseHandlerType = Type.Name(handlerName)
@@ -453,7 +453,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
           List(param"handler: $handlerType") ++ extraRouteParams,
           None
         ),
-        Term.ParamClause(List(param"mat: akka.stream.Materializer") ++ protocolImplicits, Some(Mod.Implicit()))
+        Term.ParamClause(List(param"mat: org.apache.pekko.stream.Materializer") ++ protocolImplicits, Some(Mod.Implicit()))
       )
       List(q"""
         object ${Term.Name(resourceName)} {
@@ -470,7 +470,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
     for {
       _ <- Target.log.debug(s"getExtraImports(${tracing})")
     } yield List(
-      if (tracing) Option(q"import akka.http.scaladsl.server.Directive1") else None,
+      if (tracing) Option(q"import org.apache.pekko.http.scaladsl.server.Directive1") else None,
       Option(q"import scala.language.higherKinds")
     ).flatten
 
@@ -480,7 +480,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
   ) =
     Target.pure(List.empty)
 
-  private def httpMethodToAkka(method: HttpMethod): Target[Term] = method match {
+  private def httpMethodToPekko(method: HttpMethod): Target[Term] = method match {
     case HttpMethod.DELETE  => Target.pure(q"delete")
     case HttpMethod.GET     => Target.pure(q"get")
     case HttpMethod.PATCH   => Target.pure(q"patch")
@@ -491,7 +491,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
     case other              => Target.raiseUserError(s"Unknown method: ${other}")
   }
 
-  private def pathStrToAkka(
+  private def pathStrToPekko(
       basePath: Option[String],
       path: Tracker[String],
       pathArgs: List[LanguageParameter[ScalaLanguage]]
@@ -505,7 +505,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
     (basePath.getOrElse("") + path.unwrapTracker).stripPrefix("/") match {
       case "" => Target.pure(NonEmptyList.one((q"pathEndOrSingleSlash", List.empty)))
       case fullPath =>
-        AkkaHttpServerGenerator.generateUrlPathExtractors(Tracker.cloneHistory(path, fullPath), pathArgs, modelGeneratorType)
+        PekkoHttpServerGenerator.generateUrlPathExtractors(Tracker.cloneHistory(path, fullPath), pathArgs, modelGeneratorType)
     }
   }
 
@@ -565,14 +565,14 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
         Some((xs.foldLeft[Term](x) { case (a, n) => q"${a} & ${n}" }, params.map(_.paramName)))
     }
 
-  private def bodyToAkka(methodName: String, body: Option[LanguageParameter[ScalaLanguage]]): Target[Option[Term]] =
+  private def bodyToPekko(methodName: String, body: Option[LanguageParameter[ScalaLanguage]]): Target[Option[Term]] =
     Target.pure(
       body.map { case LanguageParameter(_, _, _, _, argType) =>
         q"entity(as[${argType}](${Term.Name(s"${methodName}Decoder")}))"
       }
     )
 
-  private def headersToAkka: List[LanguageParameter[ScalaLanguage]] => Target[Option[(Term, List[Term.Name])]] =
+  private def headersToPekko: List[LanguageParameter[ScalaLanguage]] => Target[Option[(Term, List[Term.Name])]] =
     directivesFromParams(
       arg => {
         case t"String" =>
@@ -617,7 +617,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
       }
     ) _
 
-  private def qsToAkka: List[LanguageParameter[ScalaLanguage]] => Target[Option[(Term, List[Term.Name])]] = {
+  private def qsToPekko: List[LanguageParameter[ScalaLanguage]] => Target[Option[(Term, List[Term.Name])]] = {
     type Unmarshaller = Term
     type Arg          = Term
     val nameReceptacle: Arg => Type => Term = arg => tpe => q"Symbol(${arg}).as[${tpe}]"
@@ -640,9 +640,9 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
     override def toString(): String = s"Binding($value)"
   }
 
-  private def formToAkka(consumes: Tracker[NonEmptyList[ContentType]], methodName: String)(
+  private def formToPekko(consumes: Tracker[NonEmptyList[ContentType]], methodName: String)(
       params: List[LanguageParameter[ScalaLanguage]]
-  ): Target[(Option[Term], List[Stat])] = Target.log.function("formToAkka") {
+  ): Target[(Option[Term], List[Stat])] = Target.log.function("formToPekko") {
     for {
       _ <-
         if (params.exists(_.isFile) && !consumes.exists(ct => ContentType.isSubtypeOf[MultipartFormData](ct.unwrapTracker))) {
@@ -804,7 +804,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
               part.entity.dataBytes.toMat(fileSink)(Keep.right).run()
                 .transform(${Term.PartialFunction(
                     List(
-                      if (akkaHttpVersion == AkkaHttpVersion.V10_1)
+                      if (pekkoHttpVersion == PekkoHttpVersion.V10_1)
                         Some(p"""
                     case IOResult(_, Failure(t)) =>
                       dest.delete()
@@ -840,10 +840,10 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
                     case Some(cl) => s"Request Content-Length of $$cl bytes exceeds the configured limit of $$limit bytes"
                     case None     => s"Aggregated data length of request entity exceeds the configured limit of $$limit bytes"
                   }
-                  val info = new ErrorInfo(summary, "Consider increasing the value of akka.http.server.parsing.max-content-length")
-                  val status = ${akkaHttpVersion match {
-                    case AkkaHttpVersion.V10_1 => q"StatusCodes.RequestEntityTooLarge"
-                    case AkkaHttpVersion.V10_2 => q"StatusCodes.PayloadTooLarge"
+                  val info = new ErrorInfo(summary, "Consider increasing the value of pekko.http.server.parsing.max-content-length")
+                  val status = ${pekkoHttpVersion match {
+                    case PekkoHttpVersion.V10_1 => q"StatusCodes.RequestEntityTooLarge"
+                    case PekkoHttpVersion.V10_2 => q"StatusCodes.PayloadTooLarge"
                   }}
                   val msg = if (settings.verboseErrorMessages) info.formatPretty else info.summary
                   complete(HttpResponse(status, entity = msg))
@@ -908,8 +908,8 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
 
                 case Tracker(_, _: UrlencodedFormData) =>
                   for {
-                    unmarshalFieldTypeParam        <- AkkaHttpHelper.unmarshalFieldTypeParam(modelGeneratorType)
-                    unmarshalFieldUnmarshallerType <- AkkaHttpHelper.unmarshalFieldUnmarshallerType(modelGeneratorType)
+                    unmarshalFieldTypeParam        <- PekkoHttpHelper.unmarshalFieldTypeParam(modelGeneratorType)
+                    unmarshalFieldUnmarshallerType <- PekkoHttpHelper.unmarshalFieldUnmarshallerType(modelGeneratorType)
                     unmarshallerTerm = q"FormDataUnmarshaller"
                     fru = q"""
                 implicit val ${Pat.Var(unmarshallerTerm)}: FromRequestUnmarshaller[Either[Throwable, ${optionalTypes}]] =
@@ -1037,12 +1037,12 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
         qsArgs     = parameters.queryStringParams
         bodyArgs   = parameters.bodyParams
 
-        akkaPath                       <- pathStrToAkka(basePath, path, pathArgs)
-        akkaMethod                     <- httpMethodToAkka(method)
-        akkaQs                         <- qsArgs.grouped(22).toList.flatTraverse(args => qsToAkka(args).map(_.toList))
-        akkaBody                       <- bodyToAkka(methodName, bodyArgs)
-        (akkaForm, handlerDefinitions) <- formToAkka(consumes, methodName)(formArgs)
-        akkaHeaders                    <- headerArgs.grouped(22).toList.flatTraverse(args => headersToAkka(args).map(_.toList))
+        pekkoPath                       <- pathStrToPekko(basePath, path, pathArgs)
+        pekkoMethod                     <- httpMethodToPekko(method)
+        pekkoQs                         <- qsArgs.grouped(22).toList.flatTraverse(args => qsToPekko(args).map(_.toList))
+        pekkoBody                       <- bodyToPekko(methodName, bodyArgs)
+        (pekkoForm, handlerDefinitions) <- formToPekko(consumes, methodName)(formArgs)
+        pekkoHeaders                    <- headerArgs.grouped(22).toList.flatTraverse(args => headersToPekko(args).map(_.toList))
         // We aren't capitalizing the response names in order to keep back compat
         (responseCompanionTerm, responseCompanionType) = (Term.Name(responseClsName), Type.Name(responseClsName))
         responseType =
@@ -1057,7 +1057,7 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
         }
         orderedParameters = List((pathArgs ++ qsArgs ++ bodyArgs ++ formArgs ++ headerArgs).toList) ++ extractionTracingParameters
 
-        entityProcessor = akkaBody.orElse(akkaForm).getOrElse(q"discardEntity")
+        entityProcessor = pekkoBody.orElse(pekkoForm).getOrElse(q"discardEntity")
         fullRouteMatcher = {
           def bindParams(pairs: List[(Term, List[Term.Name])]): Term => Term =
             NonEmptyList
@@ -1076,11 +1076,11 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
                       )
                 }
               })
-          val pathMatcher             = bindParams(akkaPath.toList)
-          val methodMatcher           = bindParams(List((akkaMethod, List.empty)))
+          val pathMatcher             = bindParams(pekkoPath.toList)
+          val methodMatcher           = bindParams(List((pekkoMethod, List.empty)))
           val customExtractionMatcher = bindParams(customExtractionFields.map(t => (t.term, List(t.param.paramName))).toList)
-          val qsMatcher               = bindParams(akkaQs)
-          val headerMatcher           = bindParams(akkaHeaders)
+          val qsMatcher               = bindParams(pekkoQs)
+          val headerMatcher           = bindParams(pekkoHeaders)
           val tracingMatcher          = bindParams(tracingFields.map(t => (t.term, List(t.param.paramName))).toList)
           val bodyMatcher             = bindParams(List((entityProcessor, (bodyArgs.toList ++ formArgs).map(_.paramName))))
 
@@ -1153,8 +1153,8 @@ class AkkaHttpServerGenerator private (akkaHttpVersion: AkkaHttpVersion, modelGe
   ): Target[List[Defn.Def]] =
     bodyArgs.toList.traverse { case LanguageParameter(_, _, _, _, argType) =>
       for {
-        (decoder, baseType) <- AkkaHttpHelper.generateDecoder(argType, consumes, modelGeneratorType)
-        decoderImplicits    <- AkkaHttpHelper.protocolImplicits(modelGeneratorType)
+        (decoder, baseType) <- PekkoHttpHelper.generateDecoder(argType, consumes, modelGeneratorType)
+        decoderImplicits    <- PekkoHttpHelper.protocolImplicits(modelGeneratorType)
       } yield Defn.Def(
         mods = List.empty,
         Term.Name(s"${methodName}Decoder"),

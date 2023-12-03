@@ -49,7 +49,7 @@ class Issue145 extends AnyFunSpec with Matchers with SwaggerSpecRunner {
       ),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     it("should generate right companion object") {
       val cmp = companionForStaticDefns(staticDefnsPet)

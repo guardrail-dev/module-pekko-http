@@ -1,1 +1,1 @@
-dev.guardrail.generators.scala.akkaHttp.AkkaHttpGeneratorLoader
+dev.guardrail.generators.scala.pekkoHttp.PekkoHttpGeneratorLoader

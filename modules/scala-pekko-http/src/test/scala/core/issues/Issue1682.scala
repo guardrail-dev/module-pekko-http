@@ -31,6 +31,6 @@ class Issue1682 extends AnyFunSuite with Matchers with SwaggerSpecRunner {
                            |""".stripMargin
 
   test("Support for HTTP HEAD method") {
-    runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
   }
 }

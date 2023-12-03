@@ -35,7 +35,7 @@ class Issue61 extends AnyFunSuite with Matchers with SwaggerSpecRunner {
       ProtocolDefinitions(RandomType(_, tpe) :: _ :: Nil, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     tpe.structure shouldBe t"Vector[String]".structure
   }
@@ -45,7 +45,7 @@ class Issue61 extends AnyFunSuite with Matchers with SwaggerSpecRunner {
       ProtocolDefinitions(_ :: RandomType(_, tpe) :: Nil, _, _, _, _),
       _,
       _
-    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "akka-http")
+    ) = runSwaggerSpec(scalaInterpreter)(spec)(Context.empty, "pekko-http")
 
     tpe.structure shouldBe t"Long".structure
   }
