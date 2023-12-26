@@ -7,8 +7,8 @@ import dev.guardrail.sbt.modules.scalaPekkoHttp
 lazy val pekkoHttp = (
   scalaPekkoHttp
     .project
-    .customDependsOn_("guardrail-core", "0.75.3-SNAPSHOT")
-    .customDependsOn_("guardrail-scala-support", "0.75.3-SNAPSHOT")
+    .customDependsOn_("guardrail-core", "1.0.0-M1")
+    .customDependsOn_("guardrail-scala-support", "1.0.0-M1")
     .settings(
       resolvers ++= Seq(
         sbt.librarymanagement.Resolver.mavenLocal,
