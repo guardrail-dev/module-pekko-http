@@ -578,7 +578,8 @@ class PekkoHttpClientGenerator private (modelGeneratorType: ModelGeneratorType) 
     } yield StaticDefns[ScalaLanguage](
       className = clientName,
       extraImports = List.empty,
-      definitions = decls
+      definitions = decls,
+      statements = Nil
     )
   }
   private def buildClient(
